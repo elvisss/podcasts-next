@@ -1,15 +1,49 @@
+import Layout from '../../../../components/Layout';
 import 'isomorphic-fetch';
 import Link from 'next/link';
+import Error from '../../../_error';
+import slug from '../../../../helpers/slug';
 
-const Podcast = ({ clip }) => {
+export async function getServerSideProps({ query: { idp: id }, res }) {
+  try {
+    const req = await fetch(`https://api.audioboom.com/audio_clips/${id}.mp3`);
+
+    if (req.status >= 400) {
+      res.statusCode = req.status;
+      return {
+        props: {
+          channel: null,
+          audioClips: null,
+          series: null,
+          statusCode: req.status,
+        },
+      };
+    }
+
+    const {
+      body: { audio_clip: clip },
+    } = await req.json();
+
+    return { props: { clip, statusCode: 200 } };
+  } catch (err) {
+    console.log(err);
+    res.statusCode = 503;
+    return {
+      props: { channel: null, audioClips: null, series: null, statusCode: 503 },
+    };
+  }
+}
+
+const Podcast = ({ clip, statusCode }) => {
+  if (statusCode !== 200) {
+    return <Error statusCode={statusCode} />;
+  }
   return (
-    <>
-      <header>Podcasts</header>
-
+    <Layout title={`Podcasts audio - ${clip.channel.title}`}>
       <div className='modal'>
         <div className='clip'>
           <nav>
-            <Link href={`/channel?id=${clip.channel.id}`}>
+            <Link href={`/${slug(clip.channel.title)}/${clip.channel.id}`}>
               <a className='close'>&lt; Volver</a>
             </Link>
           </nav>
@@ -94,28 +128,8 @@ const Podcast = ({ clip }) => {
           z-index: 99999;
         }
       `}</style>
-
-      <style jsx global>{`
-        body {
-          margin: 0;
-          font-family: system-ui;
-          background: white;
-        }
-      `}</style>
-    </>
+    </Layout>
   );
 };
-
-export async function getServerSideProps({ query: { id } }) {
-  try {
-    let req = await fetch(`https://api.audioboom.com/audio_clips/${id}.mp3`);
-    let {
-      body: { audio_clip: clip },
-    } = await req.json();
-    return { props: { clip } };
-  } catch (err) {
-    console.log(err);
-  }
-}
 
 export default Podcast;
