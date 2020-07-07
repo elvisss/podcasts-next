@@ -1,4 +1,4 @@
-import 'isomorphic-fetch';
+import fetch from 'isomorphic-fetch';
 import Link from 'next/link';
 
 const Channel = ({ channel, audioClips, series }) => {
@@ -33,9 +33,9 @@ const Channel = ({ channel, audioClips, series }) => {
 
       <h2>Ultimos Podcasts</h2>
       {audioClips.map((clip) => (
-        <div className='podcast' key={clip.id}>
-          {clip.title}
-        </div>
+        <Link key={clip.id} href={`/podcast?id=${clip.id}`}>
+          <a className='podcast'>{clip.title}</a>
+        </Link>
       ))}
 
       <style jsx>{`
@@ -115,48 +115,35 @@ const Channel = ({ channel, audioClips, series }) => {
   );
 };
 
-export async function getServerSideProps({ query }) {
-  const id = query.id;
+export async function getServerSideProps({ query: { id } }) {
+  try {
+    const [reqChannel, reqAudios, reqSeries] = await Promise.all([
+      fetch(`https://api.audioboom.com/channels/${id}`),
+      fetch(`https://api.audioboom.com/channels/${id}/audio_clips`),
+      fetch(`https://api.audioboom.com/channels/${id}/child_channels`),
+    ]);
 
-  const reqChannel = await fetch(`https://api.audioboom.com/channels/${id}`);
-  const {
-    body: { channel },
-  } = await reqChannel.json();
+    const {
+      body: { channel },
+    } = await reqChannel.json();
+    const {
+      body: { audio_clips: audioClips },
+    } = await reqAudios.json();
+    const {
+      body: { channels: series },
+    } = await reqSeries.json();
 
-  const reqAudioClips = await fetch(
-    `https://api.audioboom.com/channels/${id}/audio_clips`,
-  );
-  const {
-    body: { audio_clips: audioClips },
-  } = await reqAudioClips.json();
-
-  const reqSeries = await fetch(
-    `https://api.audioboom.com/channels/${id}/child_channels`,
-  );
-  const {
-    body: { channels: series },
-  } = await reqSeries.json();
-
-  return { props: { channel, audioClips, series } };
-
-  /* let idChannel = query.id;
-
-  let [reqChannel, reqSeries, reqAudios] = await Promise.all([
-    fetch(`https://api.audioboom.com/channels/${idChannel}`),
-    fetch(`https://api.audioboom.com/channels/${idChannel}/audio_clips`),
-    fetch(`https://api.audioboom.com/channels/${idChannel}/child_channels`),
-  ]);
-
-  let dataChannel = await reqChannel.json();
-  let channel = dataChannel.body.channel;
-
-  let dataAudios = await reqSeries.json();
-  let audioClips = dataAudios.body.audio_clips;
-
-  let dataSeries = await reqAudios.json();
-  let series = dataSeries.body.channels;
-
-  return { props: { channel, audioClips, series } }; */
+    return {
+      props: {
+        channel,
+        audioClips,
+        series,
+      },
+    };
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
 }
 
 export default Channel;
