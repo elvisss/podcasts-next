@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import slug from '../helpers/slug';
 
-const PodcastList = ({ podcasts }) => {
+const PodcastList = ({ podcasts, onClickPodCast }) => {
   return (
     <>
       {podcasts.map((podcast) => (
@@ -11,7 +11,7 @@ const PodcastList = ({ podcasts }) => {
             podcast.title,
           )}/${podcast.id}`}
         >
-          <a className='podcast'>
+          <a onClick={(event) => onClickPodCast(event, podcast)} className='podcast'>
             <h3>{podcast.title}</h3>
             <div className='meta'>
               {Math.ceil(podcast.duration / 60)} minutes

@@ -3,6 +3,8 @@ import Layout from '../../../components/Layout';
 import ChannelGrid from '../../../components/ChannelGrid';
 import PodcastList from '../../../components/PodcastList';
 import Error from '../../_error';
+import { useState } from 'react';
+import PodcastPlayer from '../../../components/PodcastPlayer';
 
 export async function getServerSideProps({ query: { idc: id }, res }) {
   try {
@@ -51,6 +53,18 @@ export async function getServerSideProps({ query: { idc: id }, res }) {
 }
 
 const Channel = ({ channel, audioClips, series, statusCode }) => {
+  const [openPodcast, setPodcast] = useState(null);
+  const setOpenPodcast = (event, podcast) => {
+    event.preventDefault();
+    setPodcast(podcast);
+  };
+
+  const closePodcast = (event) => {
+    event.preventDefault();
+    setPodcast(null);
+  };
+
+
   if (statusCode !== 200) {
     return <Error statusCode={statusCode} />;
   }
@@ -63,6 +77,12 @@ const Channel = ({ channel, audioClips, series, statusCode }) => {
         }}
       />
 
+      {openPodcast && (
+        <div className='modal'>
+          <PodcastPlayer clip={openPodcast} onClose={closePodcast} />
+        </div>
+      )}
+
       <h1>{channel.title}</h1>
 
       {series.length > 0 && (
@@ -73,7 +93,10 @@ const Channel = ({ channel, audioClips, series, statusCode }) => {
       )}
 
       <h2>Ultimos Podcasts</h2>
-      <PodcastList podcasts={audioClips}></PodcastList>
+      <PodcastList
+        podcasts={audioClips}
+        onClickPodCast={setOpenPodcast}
+      ></PodcastList>
 
       <style jsx>{`
         .banner {
@@ -93,6 +116,14 @@ const Channel = ({ channel, audioClips, series, statusCode }) => {
           font-weight: 600;
           margin: 0;
           text-align: center;
+        }
+        .modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 99999;
         }
       `}</style>
     </Layout>
