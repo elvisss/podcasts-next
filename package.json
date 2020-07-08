@@ -1,6 +1,9 @@
 {
   "name": "podcasts-next",
   "version": "1.0.0",
+  "engines": {
+    "node": "12.14.1"
+  },
   "description": "Podcasts created with Next.js",
   "main": "index.js",
   "scripts": {
@@ -8,7 +11,11 @@
     "build": "next build",
     "start": "next start"
   },
-  "keywords": [],
+  "keywords": [
+    "nextjs",
+    "react",
+    "podcast"
+  ],
   "author": "Elvis Saavedra Segura <elvis.saavedra.segura@gmail.com>",
   "license": "MIT",
   "dependencies": {
